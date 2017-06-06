@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">mybotproject</string>
+    <string name="clear_session">Clear Session</string>
+    <string name="entry_hint">Type a message</string>
+    <string name="opening_text">Now speaking with Watson!</string>
+    <string name="conversation_icon_text">Watson Conversation Icon</string>
+    <string name="send_to_watson_button">Send to Watson</string>
+    <string name="alert_dialog_ok">OK</string>
+    <string name="alert_dialog_close">Close Application</string>
+    <string name="error_title_default">Error in mybotproject</string>
+    <string name="error_title_invalid_credentials">Invalid Watson Conversation Credentials</string>
+    <string name="error_message_invalid_credentials">Please verify your credentials in \"values/watson_credentials\" and rebuild the application.\n\nSee the README for further assistance.</string>
+    <string name="error_title_bluemix_connection">Failed to Connect to Bluemix</string>
+    <string name="error_message_bluemix_connection">Please verify your connection to the internet.\n\nSee the README for further assistance.</string>
+    <string name="error_title_invalid_workspace">Invalid Workspace ID</string>
+    <string name="error_message_invalid_workspace">Please verify your workspace ID in \"values/watson_credentials\" and rebuild the application.</string>
+</resources>
