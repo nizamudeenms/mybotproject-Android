@@ -4,4 +4,7 @@
     <color name="colorPrimaryDark">#3d70b2</color>
     <color name="colorAccent">#41d6c3</color>
     <color name="colorBackground">#ececec</color>
+    <color name="qatarMaroon">#8D1B3D</color>
+    <color name="qatarMaroonLight">#ac204c</color>
+    <color name="qatarMaroonUser">#f3bed1</color>
 </resources>

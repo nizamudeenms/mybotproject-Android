@@ -14,6 +14,16 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.NetworkError;
+import com.android.volley.NoConnectionError;
+import com.android.volley.ParseError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.ServerError;
+import com.android.volley.TimeoutError;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.ibm.mobilefirstplatform.clientsdk.android.core.api.BMSClient;
 import com.ibm.watson.developer_cloud.conversation.v1.ConversationService;
 import com.ibm.watson.developer_cloud.conversation.v1.model.MessageRequest;
@@ -21,14 +31,14 @@ import com.ibm.watson.developer_cloud.conversation.v1.model.MessageResponse;
 import com.ibm.watson.developer_cloud.service.exception.BadRequestException;
 import com.ibm.watson.developer_cloud.service.exception.UnauthorizedException;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
-
-
-
 
 
 public class MainActivity extends AppCompatActivity {
@@ -40,6 +50,11 @@ public class MainActivity extends AppCompatActivity {
     private ConversationService conversationService;
     private Map<String, Object> conversationContext;
     private ArrayList<ConversationMessage> conversationLog;
+    ArrayList<Violation> violationArrayList = new ArrayList<>();
+    String finalMessage = " ";
+    String toPass = " ";
+    String message = "";
+    String watsonResponseText = "";
 
     @Override
     @SuppressWarnings("unchecked")
@@ -188,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
             TextView watsonMessageText = (TextView) messageView.findViewById(R.id.watsonTextView);
             watsonMessageText.setText(message.getMessageText());
             if (message.getMessageText() != null)
-                Log.i("Message Text", message.getMessageText());
+                Log.i("User will see this", message.getMessageText());
 //            if (message.getMessageText().contains("violations")) {
 //                Log.i("Inside VIOlations","Vioation indisa");
 //                messageView = this.getLayoutInflater().inflate(R.layout.watson_text, messageContainer, false);
@@ -323,25 +338,172 @@ public class MainActivity extends AppCompatActivity {
         }
 */
 
+    String getViolationDetailsOnline() {
 
+        System.out.println("fines method called -----------------------XXXXXXXXXXXXXXXXX");
+        String BASE_URL = "https://api.myjson.com/bins/ybj4d";
+        String tag_json_obj = "json_obj_req";
+        message = null;
+
+        //start
+        final JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET,
+                BASE_URL, null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+
+//                        Log.i("JSON Response", response.toString());
+//                                    JSONArray c = null;
+//                                    violationArrayList.clear();
+                        try {
+                            JSONArray c = response.getJSONArray("violations");
+//                            System.out.println("c = " + c.length());
+                            System.out.println("ConversationTask.onResponse");
+//                            System.out.println(response.length());
+//                            System.out.println("response = [" + response + "]");
+
+
+                            for (int j = 0; j < c.length(); j++) {
+                                JSONObject object = c.getJSONObject(j);
+//                               System.out.println("object = " + object);
+                                Violation violationObject = new Violation();
+                                violationObject.setID(object.getString("number"));
+//                                System.out.println(" object.getString(\"number\")= " + object.getString("number"));
+                                violationObject.setDATE(object.getString("date"));
+                                violationObject.setTIME(object.getString("time"));
+                                violationObject.setDESC(object.getString("description"));
+                                violationObject.setPLACE(object.getString("place"));
+                                violationObject.setPOINTS(object.getString("points"));
+                                violationObject.setAMOUNT(object.getString("amount"));
+
+                                message = "\n\tViolation ID: " + object.getString("number")
+                                        + "\n\tDate: " + object.getString("date")
+                                        + "\n\tTime: " + object.getString("time")
+                                        + "\n\tDescription: " + object.getString("description")
+                                        + "\n\tNumber: " + object.getString("number")
+                                        + "\n\tPlace: " + object.getString("place")
+                                        + "\n\tamount: " + object.getString("amount") + "\n";
+//                                Log.i("message = " ,message);
+                                finalMessage = finalMessage + message;
+
+
+//                                violationArrayList.add(violationObject);
+//                                violationArrayList.clear();
+                            }
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+
+                    }
+                }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError volleyError) {
+
+                if (volleyError instanceof NetworkError) {
+                    finalMessage = "Cannot connect to Internet...Please check your connection!";
+                } else if (volleyError instanceof ServerError) {
+                    finalMessage = "The server could not be found. Please try again after some time!!";
+                } else if (volleyError instanceof AuthFailureError) {
+                    finalMessage = "Cannot connect to Internet...Please check your connection!";
+                } else if (volleyError instanceof ParseError) {
+                    finalMessage = "Parsing error! Please try again after some time!!";
+                } else if (volleyError instanceof NoConnectionError) {
+                    finalMessage = "Cannot connect to Internet...Please check your connection!";
+                } else if (volleyError instanceof TimeoutError) {
+                    finalMessage = "Connection TimeOut! Please check your internet connection.";
+                }
+
+            }
+        });
+
+
+        AppController.getInstance().addToRequestQueue(req, tag_json_obj);
+//        Log.i("finalMessage befor = ",finalMessage);
+//        System.out.println("finalMessage before sending  = " + finalMessage);
+        System.out.println("finalMessage = " + finalMessage);
+        return finalMessage;
+
+    }
 
     private class ConversationTask extends AsyncTask<String, Void, String> {
 
-        String watsonResponseText = "";
 
         @Override
         protected String doInBackground(String... params) {
+            System.out.println("Converssation begins ....................................");
             String entryText = params[0];
+            toPass = " ";
+
 
             MessageRequest messageRequest;
+            Log.i("watsonResponseText ", watsonResponseText);
 
             // Send Context to Watson in order to continue a conversation.
-            if (conversationContext == null) {
+            if (conversationContext == null || (watsonResponseText.contains("Cancelled"))) {
                 System.out.println("#### Conversation context is null....");
                 messageRequest = new MessageRequest.Builder()
                         .inputText(entryText).build();
-            } else {
+            } else if ((watsonResponseText != null) && (watsonResponseText.contains("your Qatar ID Number"))) {
+                System.out.println("Entered in traffic vioaltions block");
 
+                toPass = "\n\tViolation ID: 11000331"
+                        + "\n\tDate:  2017-03-10"
+                        + "\n\tTime: 5:50AM"
+                        + "\n\tDescription: Speeding"
+                        + "\n\tPlace: salwa road"
+                        + "\n\tamount: 500 QAR"
+                        + "\n\n\tViolation ID: 11000331"
+                        + "\n\tDate:  2017-03-10"
+                        + "\n\tTime: 5:50AM"
+                        + "\n\tDescription: Speeding"
+                        + "\n\tPlace: salwa road"
+                        + "\n\tamount: 500 QAR";
+                System.out.println("toPass = " + toPass);
+                conversationContext.put("fines", toPass);
+                messageRequest = new MessageRequest.Builder()
+                        .inputText(entryText)
+                        .context(conversationContext).build();
+            } else if ((watsonResponseText != null) && (watsonResponseText.contains("12 digit visa number"))) {
+                System.out.println("Entered in Visa Application block");
+
+                toPass = "\n\tApplication No: ABCD00001"
+                        + "\n\tName: Xyz ABC "
+                        + "\n\tNationality:  American"
+                        + "\n\tPassport No:  HXXXXXXX"
+                        + "\n\tVisa Type:  Business Visa"
+                        + "\n\tDuration:  1 month"
+                        + "\n\tDate of Issue:  2017-05-21"
+                        + "\n\tValidity:  2017-06-29"
+                        + "\n\tStatus:  READY TO PRINT";
+
+                System.out.println("toPass = " + toPass);
+                conversationContext.put("visa_status", toPass);
+                messageRequest = new MessageRequest.Builder()
+                        .inputText(entryText)
+                        .context(conversationContext).build();
+            } else if ((watsonResponseText != null) && (watsonResponseText.contains("provide your nationality"))) {
+                System.out.println("Entered in Visa Application block");
+
+                toPass = "\n\tApplication No: 382017371228"
+                        + "\n\tName: Abc Xyz "
+                        + "\n\tNationality:  Indian"
+                        + "\n\tPassport No:  HXXXXXXX"
+                        + "\n\tVisa Type:  Business Visa"
+                        + "\n\tDuration:  1 month"
+                        + "\n\tDate of Issue:  2017-05-21"
+                        + "\n\tValidity:  2017-06-29"
+                        + "\n\tStatus:  USED INSIDE COUNTRY";
+
+                System.out.println("toPass = " + toPass);
+                conversationContext.put("visa_status", toPass);
+                messageRequest = new MessageRequest.Builder()
+                        .inputText(entryText)
+                        .context(conversationContext).build();
+            } else {
+                Log.i("ConversationContextelse", conversationContext.toString());
                 messageRequest = new MessageRequest.Builder()
                         .inputText(entryText)
                         .context(conversationContext).build();
@@ -349,42 +511,19 @@ public class MainActivity extends AppCompatActivity {
 
             try {
 
-
+                Log.i("messageRequestbeforeRes", messageRequest.toString());
                 // Send the message to the workspace designated in watson_credentials.xml.
-                MessageResponse messageResponse = conversationService.message(
-                        getString(R.string.watson_conversation_workspace_id), messageRequest).execute();
-
-                System.out.println("After sending message to watson.....");
+                MessageResponse messageResponse = conversationService.message(getString(R.string.watson_conversation_workspace_id), messageRequest).execute();
 
                 conversationContext = messageResponse.getContext();
 
                 watsonResponseText = messageResponse.getText().get(0).trim();
 
-                System.out.println("Response from watson -> " + watsonResponseText);
+                Log.i("watsonResponseText-> ", watsonResponseText);
+                System.out.println("end of conversation ---------------------------------------");
 
-                if ((watsonResponseText.indexOf("checking traffic fines") > -1) || (watsonResponseText.indexOf("Checking traffic fines") > -1)) {
-
-                    System.out.println("Inside the if traffic fines block. Sending an empty message to watson");
-
-                    if (conversationContext.containsKey("fines") == false) {
-                        conversationContext.put("fines", "567");
-                    }
-
-                    messageRequest = new MessageRequest.Builder()
-                            .inputText(entryText)
-                            .context(conversationContext).build();
-
-                    Log.i("Request String", messageRequest.toString());
-
-                    messageResponse = conversationService.message(getString(R.string.watson_conversation_workspace_id), messageRequest).execute();
-                    Log.i("resposeString", messageResponse.toString());
-                    conversationContext = messageResponse.getContext();
-                    watsonResponseText = messageResponse.getText().get(0);
-                    Log.i("conversationContext", conversationContext.toString());
-                    System.out.println("After calling watson in the if block.. ");
-                    System.out.println("Response: " + messageResponse.getText());
-                }
-
+                Log.i("messageResponse :", messageResponse.getText().toString());
+                Log.i("messageResponse :", messageResponse.getContext().toString());
 
                 return watsonResponseText;
 
@@ -406,9 +545,9 @@ public class MainActivity extends AppCompatActivity {
             // Add the message from Watson to the UI.
             addMessageFromUser(new ConversationMessage(result, USER_WATSON));
 
-            // Record the message from Watson in the conversation log.
+            // Record the message fro   m Watson in the conversation log.
             conversationLog.add(new ConversationMessage(result, USER_WATSON));
         }
     }
 
-    }
+}
