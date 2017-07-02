@@ -440,16 +440,17 @@ public class MainActivity extends AppCompatActivity {
 
             MessageRequest messageRequest;
             Log.i("watsonResponseText ", watsonResponseText);
-
+            Log.i("Entry Text : ", entryText);
             // Send Context to Watson in order to continue a conversation.
             if (conversationContext == null || (watsonResponseText.contains("Cancelled"))) {
                 System.out.println("#### Conversation context is null....");
                 messageRequest = new MessageRequest.Builder()
                         .inputText(entryText).build();
-            } else if ((watsonResponseText != null) && (watsonResponseText.contains("your Qatar ID Number"))) {
+            } else if ((watsonResponseText != null) && (watsonResponseText.contains("your 11 digit Qatar ID "))) {
                 System.out.println("Entered in traffic vioaltions block");
 
-                toPass = "\n\tViolation ID: 11000331"
+                toPass =  "\n\tQatar Id : 12345678901"
+                        + "\n\tViolation ID: 11000331"
                         + "\n\tDate:  2017-03-10"
                         + "\n\tTime: 5:50AM"
                         + "\n\tDescription: Speeding"
@@ -460,49 +461,31 @@ public class MainActivity extends AppCompatActivity {
                         + "\n\tTime: 5:50AM"
                         + "\n\tDescription: Speeding"
                         + "\n\tPlace: salwa road"
-                        + "\n\tamount: 500 QAR";
+                        + "\n\tamount: 500 QAR\n\n";
                 System.out.println("toPass = " + toPass);
                 conversationContext.put("fines", toPass);
                 messageRequest = new MessageRequest.Builder()
                         .inputText(entryText)
                         .context(conversationContext).build();
-            } else if ((watsonResponseText != null) && (watsonResponseText.contains("12 digit visa number"))) {
+            } else if ((watsonResponseText != null) && (watsonResponseText.contains("12 digit visa number") || watsonResponseText.contains("provide your nationality"))  ) {
                 System.out.println("Entered in Visa Application block");
-
-                toPass = "\n\tApplication No: ABCD00001"
-                        + "\n\tName: Xyz ABC "
-                        + "\n\tNationality:  American"
-                        + "\n\tPassport No:  HXXXXXXX"
-                        + "\n\tVisa Type:  Business Visa"
-                        + "\n\tDuration:  1 month"
-                        + "\n\tDate of Issue:  2017-05-21"
-                        + "\n\tValidity:  2017-06-29"
-                        + "\n\tStatus:  READY TO PRINT";
+                System.out.println("entryText.length() :"+entryText.length());
+                    toPass = "\n\tApplication No: 123456789012"
+                            + "\n\tName: Xyz ABC "
+                            + "\n\tNationality:  INDIA"
+                            + "\n\tPassport No:  H1234567"
+                            + "\n\tVisa Type:  Business Visa"
+                            + "\n\tDuration:  1 month"
+                            + "\n\tDate of Issue:  2017-05-21"
+                            + "\n\tValidity:  2017-06-29"
+                            + "\n\tStatus:  READY TO PRINT";
 
                 System.out.println("toPass = " + toPass);
                 conversationContext.put("visa_status", toPass);
                 messageRequest = new MessageRequest.Builder()
                         .inputText(entryText)
                         .context(conversationContext).build();
-            } else if ((watsonResponseText != null) && (watsonResponseText.contains("provide your nationality"))) {
-                System.out.println("Entered in Visa Application block");
-
-                toPass = "\n\tApplication No: 382017371228"
-                        + "\n\tName: Abc Xyz "
-                        + "\n\tNationality:  Indian"
-                        + "\n\tPassport No:  HXXXXXXX"
-                        + "\n\tVisa Type:  Business Visa"
-                        + "\n\tDuration:  1 month"
-                        + "\n\tDate of Issue:  2017-05-21"
-                        + "\n\tValidity:  2017-06-29"
-                        + "\n\tStatus:  USED INSIDE COUNTRY";
-
-                System.out.println("toPass = " + toPass);
-                conversationContext.put("visa_status", toPass);
-                messageRequest = new MessageRequest.Builder()
-                        .inputText(entryText)
-                        .context(conversationContext).build();
-            } else {
+            }else {
                 Log.i("ConversationContextelse", conversationContext.toString());
                 messageRequest = new MessageRequest.Builder()
                         .inputText(entryText)

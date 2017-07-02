@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MOI Bot Demo</string>
+    <string name="app_name">MOI Bot Demo(Beta)</string>
     <string name="clear_session">Clear Session</string>
     <string name="entry_hint">Type a message</string>
     <string name="opening_text">Now speaking with Watson!</string>
