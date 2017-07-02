@@ -478,7 +478,7 @@ public class MainActivity extends AppCompatActivity {
                             + "\n\tDuration:  1 month"
                             + "\n\tDate of Issue:  2017-05-21"
                             + "\n\tValidity:  2017-06-29"
-                            + "\n\tStatus:  READY TO PRINT";
+                            + "\n\tStatus:  READY TO PRINT\n\n";
 
                 System.out.println("toPass = " + toPass);
                 conversationContext.put("visa_status", toPass);
