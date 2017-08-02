@@ -14,16 +14,6 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.NetworkError;
-import com.android.volley.NoConnectionError;
-import com.android.volley.ParseError;
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.ServerError;
-import com.android.volley.TimeoutError;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.ibm.mobilefirstplatform.clientsdk.android.core.api.BMSClient;
 import com.ibm.watson.developer_cloud.conversation.v1.ConversationService;
 import com.ibm.watson.developer_cloud.conversation.v1.model.MessageRequest;
@@ -32,13 +22,17 @@ import com.ibm.watson.developer_cloud.service.exception.BadRequestException;
 import com.ibm.watson.developer_cloud.service.exception.UnauthorizedException;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -55,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     String toPass = " ";
     String message = "";
     String watsonResponseText = "";
+    CountDownLatch latch = new CountDownLatch(1);
 
     @Override
     @SuppressWarnings("unchecked")
@@ -273,160 +268,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Asynchronously sends the user's message to Watson Conversation and receives Watson's response.
-     */
-/*
-   private class ConversationTask extends AsyncTask<String, Void, String> {
-
-        @Override
-        protected String doInBackground(String... params) {
-            String entryText = params[0];
-
-            MessageRequest messageRequest;
-
-//            Log.i("Test", conversationContext.values().toString());
-
-            // Send Context to Watson in order to continue a conversation.
-            if (conversationContext == null) {
-                messageRequest = new MessageRequest.Builder()
-                        .inputText(entryText).build();
-            } else {
-                conversationContext.put("fines", "77777");
-                messageRequest = new MessageRequest.Builder()
-                        .inputText(entryText)
-                        .context(conversationContext).build();
-
-                Log.i("InSide context","yyyyyyyyyyyyyyyyy");
-                Log.i("ram",messageRequest.toString());
-
-                if(messageRequest.toString().contains("fines")){
-                conversationContext.put("fines", "fine is 100");
-                }
-            }
-
-            try {
-                // Send the message to the workspace designated in watson_credentials.xml.
-                MessageResponse messageResponse = conversationService.message(
-                        getString(R.string.watson_conversation_workspace_id), messageRequest).execute();
-                Log.i("resposeString", messageResponse.toString());
-
-                conversationContext = messageResponse.getContext();
-               Log.i("messageResponse::",messageResponse.toString());
-
-
-                return  messageResponse.getText().get(0);
-            } catch (Exception ex) {
-                // A failure here is usually caused by an incorrect workspace in watson_credentials.
-                if (ex.getClass().equals(BadRequestException.class)) {
-                    showDialog(R.string.error_title_invalid_workspace,
-                            getString(R.string.error_message_invalid_workspace), false);
-                } else {
-                    showDialog(R.string.error_title_default, ex.getMessage(), true);
-                }
-                return null;
-            }
-        }
-
-          @Override
-        protected void onPostExecute(String result) {
-            // Add the message from Watson to the UI.
-            addMessageFromUser(new ConversationMessage(result, USER_WATSON));
-
-            // Record the message from Watson in the conversation log.
-            conversationLog.add(new ConversationMessage(result, USER_WATSON));
-        }
-*/
-
-    String getViolationDetailsOnline() {
-
-        System.out.println("fines method called -----------------------XXXXXXXXXXXXXXXXX");
-        String BASE_URL = "https://api.myjson.com/bins/ybj4d";
-        String tag_json_obj = "json_obj_req";
-        message = null;
-
-        //start
-        final JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET,
-                BASE_URL, null,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-
-//                        Log.i("JSON Response", response.toString());
-//                                    JSONArray c = null;
-//                                    violationArrayList.clear();
-                        try {
-                            JSONArray c = response.getJSONArray("violations");
-//                            System.out.println("c = " + c.length());
-                            System.out.println("ConversationTask.onResponse");
-//                            System.out.println(response.length());
-//                            System.out.println("response = [" + response + "]");
-
-
-                            for (int j = 0; j < c.length(); j++) {
-                                JSONObject object = c.getJSONObject(j);
-//                               System.out.println("object = " + object);
-                                Violation violationObject = new Violation();
-                                violationObject.setID(object.getString("number"));
-//                                System.out.println(" object.getString(\"number\")= " + object.getString("number"));
-                                violationObject.setDATE(object.getString("date"));
-                                violationObject.setTIME(object.getString("time"));
-                                violationObject.setDESC(object.getString("description"));
-                                violationObject.setPLACE(object.getString("place"));
-                                violationObject.setPOINTS(object.getString("points"));
-                                violationObject.setAMOUNT(object.getString("amount"));
-
-                                message = "\n\tViolation ID: " + object.getString("number")
-                                        + "\n\tDate: " + object.getString("date")
-                                        + "\n\tTime: " + object.getString("time")
-                                        + "\n\tDescription: " + object.getString("description")
-                                        + "\n\tNumber: " + object.getString("number")
-                                        + "\n\tPlace: " + object.getString("place")
-                                        + "\n\tamount: " + object.getString("amount") + "\n";
-//                                Log.i("message = " ,message);
-                                finalMessage = finalMessage + message;
-
-
-//                                violationArrayList.add(violationObject);
-//                                violationArrayList.clear();
-                            }
-
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-
-
-                    }
-                }, new Response.ErrorListener() {
-
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-
-                if (volleyError instanceof NetworkError) {
-                    finalMessage = "Cannot connect to Internet...Please check your connection!";
-                } else if (volleyError instanceof ServerError) {
-                    finalMessage = "The server could not be found. Please try again after some time!!";
-                } else if (volleyError instanceof AuthFailureError) {
-                    finalMessage = "Cannot connect to Internet...Please check your connection!";
-                } else if (volleyError instanceof ParseError) {
-                    finalMessage = "Parsing error! Please try again after some time!!";
-                } else if (volleyError instanceof NoConnectionError) {
-                    finalMessage = "Cannot connect to Internet...Please check your connection!";
-                } else if (volleyError instanceof TimeoutError) {
-                    finalMessage = "Connection TimeOut! Please check your internet connection.";
-                }
-
-            }
-        });
-
-
-        AppController.getInstance().addToRequestQueue(req, tag_json_obj);
-//        Log.i("finalMessage befor = ",finalMessage);
-//        System.out.println("finalMessage before sending  = " + finalMessage);
-        System.out.println("finalMessage = " + finalMessage);
-        return finalMessage;
-
-    }
 
     private class ConversationTask extends AsyncTask<String, Void, String> {
 
@@ -435,8 +276,9 @@ public class MainActivity extends AppCompatActivity {
         protected String doInBackground(String... params) {
             System.out.println("Converssation begins ....................................");
             String entryText = params[0];
-            toPass = " ";
-
+            JSONObject violationJson = new JSONObject();
+            finalMessage = "";
+            message = "";
 
             MessageRequest messageRequest;
             Log.i("watsonResponseText ", watsonResponseText);
@@ -448,8 +290,8 @@ public class MainActivity extends AppCompatActivity {
                         .inputText(entryText).build();
             } else if ((watsonResponseText != null) && (watsonResponseText.contains("your 11 digit Qatar ID "))) {
                 System.out.println("Entered in traffic vioaltions block");
-
-                toPass =  "\n\tQatar Id : 12345678901"
+                String rawJson = "";
+                /*toPass =  "\n\tQatar Id : 12345678901"
                         + "\n\tViolation ID: 11000331"
                         + "\n\tDate:  2017-03-10"
                         + "\n\tTime: 5:50AM"
@@ -461,31 +303,73 @@ public class MainActivity extends AppCompatActivity {
                         + "\n\tTime: 5:50AM"
                         + "\n\tDescription: Speeding"
                         + "\n\tPlace: salwa road"
-                        + "\n\tamount: 500 QAR\n\n";
+                        + "\n\tamount: 500 QAR\n\n";*/
+
+                OkHttpClient client = new OkHttpClient();
+
+                try {
+                    Request request = new Request.Builder()
+                            .url("https://api.myjson.com/bins/ybj4d")
+                            .build();
+
+                    Response response = client.newCall(request).execute();
+                    rawJson = response.body().string();
+                    JSONObject jsonObject = new JSONObject(rawJson);
+                    JSONArray jsonArray = jsonObject.getJSONArray("violations");
+
+                    for (int j = 0; j < jsonArray.length(); j++) {
+                        JSONObject object = jsonArray.getJSONObject(j);
+//                               System.out.println("object = " + object);
+                        Violation violationObject = new Violation();
+                        violationObject.setID(object.getString("number"));
+//                                System.out.println(" object.getString(\"number\")= " + object.getString("number"));
+                        violationObject.setDATE(object.getString("date"));
+                        violationObject.setTIME(object.getString("time"));
+                        violationObject.setDESC(object.getString("description"));
+                        violationObject.setPLACE(object.getString("place"));
+                        violationObject.setPOINTS(object.getString("points"));
+                        violationObject.setAMOUNT(object.getString("amount"));
+
+                        message = "\n\tViolation ID: " + object.getString("number")
+                                + "\n\tDate: " + object.getString("date")
+                                + "\n\tTime: " + object.getString("time")
+                                + "\n\tDescription: " + object.getString("description")
+                                + "\n\tNumber: " + object.getString("number")
+                                + "\n\tPlace: " + object.getString("place")
+                                + "\n\tamount: " + object.getString("amount") + "\n";
+                        Log.i("message = ", message);
+                        finalMessage = finalMessage + message;
+
+                    }
+                    toPass = finalMessage;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+//                toPass = dataGot();
                 System.out.println("toPass = " + toPass);
                 conversationContext.put("fines", toPass);
                 messageRequest = new MessageRequest.Builder()
                         .inputText(entryText)
                         .context(conversationContext).build();
-            } else if ((watsonResponseText != null) && (watsonResponseText.contains("12 digit visa number") || watsonResponseText.contains("provide your nationality"))  ) {
+            } else if ((watsonResponseText != null) && (watsonResponseText.contains("12 digit visa number") || watsonResponseText.contains("provide your nationality"))) {
                 System.out.println("Entered in Visa Application block");
-                System.out.println("entryText.length() :"+entryText.length());
-                    toPass = "\n\tApplication No: 123456789012"
-                            + "\n\tName: Xyz ABC "
-                            + "\n\tNationality:  INDIA"
-                            + "\n\tPassport No:  H1234567"
-                            + "\n\tVisa Type:  Business Visa"
-                            + "\n\tDuration:  1 month"
-                            + "\n\tDate of Issue:  2017-05-21"
-                            + "\n\tValidity:  2017-06-29"
-                            + "\n\tStatus:  READY TO PRINT\n\n";
+                System.out.println("entryText.length() :" + entryText.length());
+                toPass = "\n\tApplication No: 123456789012"
+                        + "\n\tName: Muhammed"
+                        + "\n\tNationality:  INDIA"
+                        + "\n\tPassport No:  H1234567"
+                        + "\n\tVisa Type:  Business Visa"
+                        + "\n\tDuration:  1 month"
+                        + "\n\tDate of Issue:  2017-05-21"
+                        + "\n\tValidity:  2017-06-29"
+                        + "\n\tStatus:  READY TO PRINT\n\n";
 
                 System.out.println("toPass = " + toPass);
                 conversationContext.put("visa_status", toPass);
                 messageRequest = new MessageRequest.Builder()
                         .inputText(entryText)
                         .context(conversationContext).build();
-            }else {
+            } else {
                 Log.i("ConversationContextelse", conversationContext.toString());
                 messageRequest = new MessageRequest.Builder()
                         .inputText(entryText)
